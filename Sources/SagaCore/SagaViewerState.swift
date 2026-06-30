@@ -91,10 +91,8 @@ public class SagaViewerState: ObservableObject {
                         // 偶数の場合は奇数にする
                         if target + 1 <= maxIndex {
                             target += 1
-                        } else if target - 1 >= 1 {
-                            target -= 1
                         } else {
-                            target = 1
+                            target -= 1
                         }
                     }
                 } else {
