@@ -25,7 +25,7 @@ cp "${BUILD_BIN}" "${APP_DIR}/Contents/MacOS/${APP_NAME}"
 
 # リソースファイル (SPMリソース) のコピー
 # Package.swift 内で定義された resources の成果物をコピーする
-SPM_RESOURCES=$(find .build/release -name "${APP_NAME}_${APP_NAME}.resources" | head -n 1)
+SPM_RESOURCES=$(find .build/release -iname "${APP_NAME}_${APP_NAME}.resources" | head -n 1)
 if [ -d "${SPM_RESOURCES}" ]; then
     echo "==> Embedding resources..."
     cp -R "${SPM_RESOURCES}/" "${APP_DIR}/Contents/Resources/"

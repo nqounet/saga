@@ -4,4 +4,4 @@ run = "swift run Saga"
 
 [tasks.build]
 description = "Build and package the production Saga.app bundle"
-run = "./build_app.sh"
+run = "bash ./build_app.sh"
