@@ -3,12 +3,28 @@ import Combine
 
 @MainActor
 public class SagaViewerState: ObservableObject {
-    @Published public var sourceImages: [URL] = []
-    @Published public var pointer: Int = 0
+    @Published public var sourceImages: [URL] = [] {
+        didSet {
+            validatePointer()
+        }
+    }
+    @Published public var pointer: Int = 0 {
+        didSet {
+            validatePointer()
+        }
+    }
     
-    @Published public var displayCount: Int = 2
+    @Published public var displayCount: Int = 2 {
+        didSet {
+            validatePointer()
+        }
+    }
     @Published public var pageDirection: Direction = .rtl
-    @Published public var isShifted: Bool = false
+    @Published public var isShifted: Bool = false {
+        didSet {
+            validatePointer()
+        }
+    }
     
     public enum Direction {
         case rtl
@@ -50,6 +66,52 @@ public class SagaViewerState: ObservableObject {
         self.sourceImages = sortedFiles
         self.pointer = 0
     }
+    
+    private func validatePointer() {
+        guard !sourceImages.isEmpty else {
+            if pointer != 0 { pointer = 0 }
+            return
+        }
+        
+        var target = pointer
+        // 範囲制限
+        if target < 0 {
+            target = 0
+        } else if target > maxIndex {
+            target = maxIndex
+        }
+        
+        // 2枚表示モードの場合の偶奇調整
+        if displayCount == 2 {
+            if isShifted {
+                if maxIndex >= 1 {
+                    if target < 1 {
+                        target = 1
+                    } else if target % 2 == 0 {
+                        // 偶数の場合は奇数にする
+                        if target + 1 <= maxIndex {
+                            target += 1
+                        } else if target - 1 >= 1 {
+                            target -= 1
+                        } else {
+                            target = 1
+                        }
+                    }
+                } else {
+                    target = 0
+                }
+            } else {
+                // 偽のときは偶数にする
+                if target % 2 == 1 {
+                    target -= 1
+                }
+            }
+        }
+        
+        if pointer != target {
+            pointer = target
+        }
+    }
 }
 
 @MainActor
@@ -61,12 +123,7 @@ public func calculateDisplayIndices(state: SagaViewerState) -> (left: Int?, righ
         return state.pageDirection == .ltr ? (state.pointer, nil) : (nil, state.pointer)
     }
     
-    // 2. 2枚表示 且つ 1枚ずらしON 且つ 先頭ページ（表紙）の場合
-    if state.isShifted && state.pointer == 0 {
-        return state.pageDirection == .ltr ? (0, nil) : (nil, 0)
-    }
-    
-    // 3. 通常の2枚表示マッピング
+    // 2. 2枚表示マッピング
     let first = state.pointer
     let second = (first + 1 <= state.maxIndex) ? (first + 1) : nil
     
@@ -81,11 +138,6 @@ public func calculateDisplayIndices(state: SagaViewerState) -> (left: Int?, righ
 @MainActor
 public func getStepSize(state: SagaViewerState, isMovingForward: Bool) -> Int {
     if state.displayCount == 1 { return 1 }
-    
-    if state.isShifted {
-        if isMovingForward && state.pointer == 0 { return 1 }
-        if !isMovingForward && state.pointer == 1 { return 1 }
-    }
     
     return state.displayCount // 通常は 2 ページずつ移動
 }

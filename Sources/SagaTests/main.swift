@@ -83,22 +83,28 @@ func testSagaViewerState_CalculateDisplayIndices() {
     assertEqual(left3, nil, "RTL 1-page display should place nil on the left")
     assertEqual(right3, 2, "RTL 1-page display should place image on the right")
     
-    // 3. 2枚表示 且つ 1枚ずらしON 且つ 先頭ページ（表紙）
+    // 3. 2枚表示 且つ 1枚ずらしON
     state.displayCount = 2
-    state.isShifted = true
     state.pointer = 0
+    state.isShifted = true
+    // isShifted が true の場合、pointer は自動的に 1 に調整されるはず。
+    assertEqual(state.pointer, 1, "isShifted=true should adjust pointer to 1")
+    
     state.pageDirection = .ltr
     let (left4, right4) = calculateDisplayIndices(state: state)
-    assertEqual(left4, 0, "Shifted cover LTR should place image on the left")
-    assertEqual(right4, nil, "Shifted cover LTR should place nil on the right")
+    assertEqual(left4, 1, "Shifted LTR should place pointer on the left")
+    assertEqual(right4, 2, "Shifted LTR should place pointer+1 on the right")
     
     state.pageDirection = .rtl
     let (left5, right5) = calculateDisplayIndices(state: state)
-    assertEqual(left5, nil, "Shifted cover RTL should place nil on the left")
-    assertEqual(right5, 0, "Shifted cover RTL should place image on the right")
+    assertEqual(left5, 2, "Shifted RTL should place pointer+1 on the left")
+    assertEqual(right5, 1, "Shifted RTL should place pointer on the right")
+    
+    // isShifted を false に戻すと pointer は 0 に戻るはず
+    state.isShifted = false
+    assertEqual(state.pointer, 0, "isShifted=false should adjust pointer back to 0")
     
     // 4. 通常の2枚表示
-    state.isShifted = false
     state.pointer = 0
     state.pageDirection = .ltr
     let (left6, right6) = calculateDisplayIndices(state: state)
@@ -149,27 +155,22 @@ func testSagaViewerState_PageTransition() {
     state.displayCount = 2
     state.isShifted = true
     
-    // 表紙（0）から進む時は step=1
-    state.pointer = 0
-    assertEqual(getStepSize(state: state, isMovingForward: true), 1, "Step forward from cover (0) with shift should be 1")
-    movePage(state: state, forward: true)
-    assertEqual(state.pointer, 1, "Pointer should go to 1 from 0 with shift")
+    // isShifted が true のとき、pointer は 1 から始まる
+    assertEqual(state.pointer, 1, "Pointer should be adjusted to 1 when isShifted is set to true")
     
-    // 1 から戻る時は step=1
-    assertEqual(getStepSize(state: state, isMovingForward: false), 1, "Step backward from 1 with shift should be 1")
-    movePage(state: state, forward: false)
-    assertEqual(state.pointer, 0, "Pointer should return to 0 from 1 with shift")
-    
-    // 通常ページ（1）から進む時は step=2
-    state.pointer = 1
-    assertEqual(getStepSize(state: state, isMovingForward: true), 2, "Step forward from 1 with shift should be 2")
+    // 1 から進む時は step=2
+    assertEqual(getStepSize(state: state, isMovingForward: true), 2, "Step forward with shift should be 2")
     movePage(state: state, forward: true)
     assertEqual(state.pointer, 3, "Pointer should go to 3 from 1 with shift")
     
-    // 3から戻る時は step=2
-    assertEqual(getStepSize(state: state, isMovingForward: false), 2, "Step backward from 3 with shift should be 2")
+    // 3 から戻る時は step=2
+    assertEqual(getStepSize(state: state, isMovingForward: false), 2, "Step backward with shift should be 2")
     movePage(state: state, forward: false)
     assertEqual(state.pointer, 1, "Pointer should return to 1 from 3 with shift")
+    
+    // 1 からさらに戻ろうとしても、isShifted=true のときは 1 未満にならない
+    movePage(state: state, forward: false)
+    assertEqual(state.pointer, 1, "Pointer should not go below 1 when isShifted is true")
     
     // 3. 境界値チェック (maxIndexを超えない)
     // maxIndex = 4 (urls.count = 5)
@@ -177,11 +178,6 @@ func testSagaViewerState_PageTransition() {
     state.pointer = 3
     movePage(state: state, forward: true)
     assertEqual(state.pointer, 3, "Should not advance past maxIndex boundary")
-    
-    // pointer = 4 (奇数枚の最後)
-    state.pointer = 4
-    movePage(state: state, forward: true)
-    assertEqual(state.pointer, 4, "Should not advance past maxIndex boundary at last element")
 }
 
 import AppKit
