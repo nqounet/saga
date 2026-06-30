@@ -20,7 +20,8 @@ let package = Package(
         .executableTarget(
             name: "Saga",
             dependencies: ["SagaCore"],
-            path: "Sources/Saga"
+            path: "Sources/Saga",
+            resources: [.process("Resources")]
         ),
         .executableTarget(
             name: "SagaTests",

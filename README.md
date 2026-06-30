@@ -1,5 +1,7 @@
 # SAGA (Swift AVIF Graphic Assistant)
 
+![SAGA Header](Resources/header.jpg)
+
 SAGAは、macOS 13 Ventura以降のネイティブ機能（SwiftUI / Combine / AppKit）を活用し、ローカルフォルダ内のAVIF形式の画像ファイルをコミック閲覧に最適化されたレイアウトでブラウジングする、軽量なデスクトップアプリケーションです。
 
 ---
