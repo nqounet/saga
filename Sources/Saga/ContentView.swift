@@ -59,7 +59,11 @@ public struct ContentView: View {
                 Text("2枚表示").tag(2)
             }
             .pickerStyle(.segmented)
+            .labelsHidden()
             .frame(width: 150)
+            
+            Divider()
+                .frame(height: 20)
             
             // ページ方向
             Picker("綴じ方向", selection: $state.pageDirection) {
@@ -67,11 +71,18 @@ public struct ContentView: View {
                 Text("左開き (LTR)").tag(SagaViewerState.Direction.ltr)
             }
             .pickerStyle(.segmented)
+            .labelsHidden()
             .frame(width: 200)
+            
+            Divider()
+                .frame(height: 20)
             
             // 1枚ずらし
             Toggle("1枚ずらす（表紙）", isOn: $state.isShifted)
                 .disabled(state.displayCount == 1)
+            
+            Divider()
+                .frame(height: 20)
             
             Button(action: reloadFolder) {
                 Image(systemName: "arrow.clockwise")
