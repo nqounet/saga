@@ -6,6 +6,12 @@ import SagaCore
 let app = NSApplication.shared
 app.setActivationPolicy(.regular)
 
+// アプリアイコンの設定
+if let iconURL = Bundle.module.url(forResource: "AppIcon", withExtension: "png"),
+   let iconImage = NSImage(contentsOf: iconURL) {
+    app.applicationIconImage = iconImage
+}
+
 struct SagaApp: App {
     @StateObject private var state = SagaViewerState()
     

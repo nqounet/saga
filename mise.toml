@@ -1,0 +1,7 @@
+[tasks.dev]
+description = "Build and run the application in development mode"
+run = "swift run Saga"
+
+[tasks.build]
+description = "Build and package the production Saga.app bundle"
+run = "bash ./build_app.sh"
