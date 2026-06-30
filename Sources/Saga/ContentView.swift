@@ -94,22 +94,20 @@ public struct ContentView: View {
     
     private var mainStage: some View {
         let indices = calculateDisplayIndices(state: state)
+        let showBoth = indices.left != nil && indices.right != nil
         
         return HStack(spacing: 0) {
             // 左ビュー
             if let leftIdx = indices.left, leftIdx < state.sourceImages.count {
-                AsyncImageView(url: state.sourceImages[leftIdx])
+                AsyncImageView(url: state.sourceImages[leftIdx], alignment: showBoth ? .trailing : .center)
             } else {
                 Color.black
                     .overlay(Text(state.sourceImages.isEmpty ? "" : "余白").foregroundColor(.gray.opacity(0.3)))
             }
             
-            Divider()
-                .background(Color.white.opacity(0.1))
-            
             // 右ビュー
             if let rightIdx = indices.right, rightIdx < state.sourceImages.count {
-                AsyncImageView(url: state.sourceImages[rightIdx])
+                AsyncImageView(url: state.sourceImages[rightIdx], alignment: showBoth ? .leading : .center)
             } else {
                 Color.black
                     .overlay(Text(state.sourceImages.isEmpty ? "" : "余白").foregroundColor(.gray.opacity(0.3)))
@@ -219,6 +217,7 @@ public struct ContentView: View {
 
 struct AsyncImageView: View {
     let url: URL?
+    var alignment: Alignment = .center
     @State private var image: NSImage? = nil
     @State private var isLoading = false
     @State private var errorMessage: String? = nil
@@ -231,6 +230,7 @@ struct AsyncImageView: View {
                 Image(nsImage: image)
                     .resizable()
                     .scaledToFit()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
                     .transition(.opacity.animation(.easeOut(duration: 0.15)))
             } else if isLoading {
                 ProgressView()
