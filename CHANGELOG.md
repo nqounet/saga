@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-06-30
+
+### Added
+- アプリのアイコン追加と Saga.app パッケージング用のビルドスクリプトを追加 (#11)
+- 開発およびプロダクションビルド用の mise タスクを追加 (#11)
+
+### Changed
+- 実際の変更内容を反映して README.md を更新 (#10)
+- アプリのアイコンをフラットデザインに変更し、背景を透過処理 (#11)
+
+### Fixed
+- リソース検索時の大文字小文字の区別を解決し、miseタスクの実行を修正 (#11)
+
 ## [0.1.3] - 2026-06-30
 
 ### Changed
