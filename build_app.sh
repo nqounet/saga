@@ -62,7 +62,7 @@ echo "==> Generating AppIcon.icns from logo..."
 ICONSET_DIR="AppIcon.iconset"
 mkdir -p "${ICONSET_DIR}"
 
-SRC_IMAGE="Sources/Saga/Resources/AppIcon.jpg"
+SRC_IMAGE="Sources/Saga/Resources/AppIcon.png"
 
 if [ -f "${SRC_IMAGE}" ]; then
     # 各サイズにリサイズ & PNG変換
