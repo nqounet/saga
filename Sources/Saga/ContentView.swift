@@ -223,13 +223,14 @@ struct AsyncImageView: View {
     @State private var errorMessage: String? = nil
     
     var body: some View {
-        ZStack(alignment: alignment) {
+        ZStack {
             Color.black
             
             if let image = image {
                 Image(nsImage: image)
                     .resizable()
                     .scaledToFit()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
                     .transition(.opacity.animation(.easeOut(duration: 0.15)))
             } else if isLoading {
                 ProgressView()
