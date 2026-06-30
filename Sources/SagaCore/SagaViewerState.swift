@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+@MainActor
 public class SagaViewerState: ObservableObject {
     @Published public var sourceImages: [URL] = []
     @Published public var pointer: Int = 0
@@ -23,32 +24,35 @@ public class SagaViewerState: ObservableObject {
     
     public init() {}
     
-    public func scanFolder(at directoryURL: URL) {
-        let fileManager = FileManager.default
-        guard let files = try? fileManager.contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) else {
-            self.sourceImages = []
-            self.pointer = 0
-            return
-        }
+    public func scanFolder(at directoryURL: URL) async {
+        let supported = self.supportedExtensions // ローカルにコピーしてバックグラウンドへ安全にキャプチャ
         
-        // 拡張子フィルタリング (supportedExtensions に含まれるか大文字小文字無視で判定)
-        let filteredFiles = files.filter { url in
-            let ext = url.pathExtension.lowercased()
-            return supportedExtensions.contains(ext)
-        }
-        
-        // 自然順（localizedStandardCompare）でソート
-        let sortedFiles = filteredFiles.sorted { url1, url2 in
-            let name1 = url1.lastPathComponent
-            let name2 = url2.lastPathComponent
-            return name1.localizedStandardCompare(name2) == .orderedAscending
-        }
+        let sortedFiles = await Task.detached(priority: .userInitiated) { () -> [URL] in
+            let fileManager = FileManager.default
+            guard let files = try? fileManager.contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) else {
+                return []
+            }
+            
+            // 拡張子フィルタリング
+            let filteredFiles = files.filter { url in
+                let ext = url.pathExtension.lowercased()
+                return supported.contains(ext)
+            }
+            
+            // 自然順でソート
+            return filteredFiles.sorted { url1, url2 in
+                let name1 = url1.lastPathComponent
+                let name2 = url2.lastPathComponent
+                return name1.localizedStandardCompare(name2) == .orderedAscending
+            }
+        }.value
         
         self.sourceImages = sortedFiles
         self.pointer = 0
     }
 }
 
+@MainActor
 public func calculateDisplayIndices(state: SagaViewerState) -> (left: Int?, right: Int?) {
     guard !state.sourceImages.isEmpty else { return (nil, nil) }
     
@@ -74,6 +78,7 @@ public func calculateDisplayIndices(state: SagaViewerState) -> (left: Int?, righ
     }
 }
 
+@MainActor
 public func getStepSize(state: SagaViewerState, isMovingForward: Bool) -> Int {
     if state.displayCount == 1 { return 1 }
     
@@ -85,6 +90,7 @@ public func getStepSize(state: SagaViewerState, isMovingForward: Bool) -> Int {
     return state.displayCount // 通常は 2 ページずつ移動
 }
 
+@MainActor
 public func movePage(state: SagaViewerState, forward: Bool) {
     let step = getStepSize(state: state, isMovingForward: forward)
     

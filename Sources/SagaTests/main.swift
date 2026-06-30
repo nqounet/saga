@@ -8,6 +8,7 @@ func assertEqual<T: Equatable>(_ actual: T, _ expected: T, _ message: String = "
     }
 }
 
+@MainActor
 func testSagaViewerState_Initialization() {
     print("  - testSagaViewerState_Initialization")
     let state = SagaViewerState()
@@ -18,7 +19,8 @@ func testSagaViewerState_Initialization() {
     assertEqual(state.isShifted, false, "isShifted should default to false")
 }
 
-func testSagaViewerState_FileScanningAndSorting() {
+@MainActor
+func testSagaViewerState_FileScanningAndSorting() async {
     print("  - testSagaViewerState_FileScanningAndSorting")
     // テンポラリディレクトリを作成してダミーファイルを配置
     let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -43,7 +45,7 @@ func testSagaViewerState_FileScanningAndSorting() {
     }
     
     let state = SagaViewerState()
-    state.scanFolder(at: tempDir)
+    await state.scanFolder(at: tempDir)
     
     // 期待される結果は自然順ソートされた .avif / .AVIF のファイル名
     let expectedNames = ["1.avif", "2.avif", "03.avif", "10.AVIF"]
@@ -52,6 +54,7 @@ func testSagaViewerState_FileScanningAndSorting() {
     assertEqual(actualNames, expectedNames, "Scanned files should be filtered and sorted naturally")
 }
 
+@MainActor
 func testSagaViewerState_CalculateDisplayIndices() {
     print("  - testSagaViewerState_CalculateDisplayIndices")
     let state = SagaViewerState()
@@ -121,6 +124,7 @@ func testSagaViewerState_CalculateDisplayIndices() {
     assertEqual(right9, 4, "Odd-ended RTL should place last image on the right")
 }
 
+@MainActor
 func testSagaViewerState_PageTransition() {
     print("  - testSagaViewerState_PageTransition")
     let state = SagaViewerState()
@@ -233,10 +237,18 @@ func testSagaImageLoader() {
     assertEqual(isCached, true, "Loaded image should be cached")
 }
 
-print("🏃 Running SagaTests...")
-testSagaViewerState_Initialization()
-testSagaViewerState_FileScanningAndSorting()
-testSagaViewerState_CalculateDisplayIndices()
-testSagaViewerState_PageTransition()
-testSagaImageLoader()
-print("✅ All tests passed!")
+// トップレベルでのテスト実行 (async化)
+Task { @MainActor in
+    print("🏃 Running SagaTests...")
+    testSagaViewerState_Initialization()
+    await testSagaViewerState_FileScanningAndSorting()
+    testSagaViewerState_CalculateDisplayIndices()
+    testSagaViewerState_PageTransition()
+    testSagaImageLoader()
+    print("✅ All tests passed!")
+    exit(0)
+}
+
+// 実行ループを維持して非同期タスクの完了を待つ
+RunLoop.main.run()
+

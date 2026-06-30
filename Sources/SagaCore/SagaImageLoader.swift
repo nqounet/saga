@@ -4,7 +4,7 @@ import ImageIO
 
 extension NSImage: @retroactive @unchecked Sendable {}
 
-public class SagaImageLoader {
+public final class SagaImageLoader: @unchecked Sendable {
     public static let shared = SagaImageLoader()
     
     private let cache = NSCache<NSURL, NSImage>()

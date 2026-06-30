@@ -142,9 +142,9 @@ public struct ContentView: View {
         
         openPanel.begin { response in
             if response == .OK, let url = openPanel.url {
-                DispatchQueue.main.async {
+                Task {
                     SagaImageLoader.shared.clearCache()
-                    self.state.scanFolder(at: url)
+                    await self.state.scanFolder(at: url)
                 }
             }
         }
@@ -154,11 +154,22 @@ public struct ContentView: View {
         guard let firstURL = state.sourceImages.first else { return }
         let parentFolder = firstURL.deletingLastPathComponent()
         SagaImageLoader.shared.clearCache()
-        state.scanFolder(at: parentFolder)
+        Task {
+            await state.scanFolder(at: parentFolder)
+        }
     }
     
     private func setupKeyMonitor() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // フォーカスがテキストエリアや入力フィールドにある場合は、キー入力を横取りせずそのまま流す
+            if let window = NSApp.keyWindow,
+               let firstResponder = window.firstResponder {
+                let className = String(describing: type(of: firstResponder))
+                if className.contains("TextView") || className.contains("TextField") {
+                    return event
+                }
+            }
+            
             switch event.keyCode {
             case 123: // 左矢印キー
                 handleKeyEvent(isLeftKey: true)
