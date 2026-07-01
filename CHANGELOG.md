@@ -8,43 +8,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - 2026-07-01
 
 ### Added
-- ドラッグ＆ドロップによるフォルダ選択をサポート (#15)
-- `showsCoverPage` （表紙を表示）と、単一ページ時の中央表示機能を実装 (#14)
-- ステータスバーとツールバーの表示非表示切り替え機能を追加 (#13)
+- Support folder selection via drag and drop (#15)
+- Implement `showsCoverPage` (show cover page) and center alignment for single pages (#14)
+- Add visibility toggle for status bar and toolbar (#13)
 
 ### Changed
-- メニュー項目を英語にローカライズし、標準の View メニューに統合 (#13)
+- Localize menu items to English and integrate into standard View menu (#13)
 
 ### Refactored
-- `getStepSize` 内のネストされた if 文を簡素化 (#14)
-- コントロールパネルからステータスバー切り替えボタンを削除し統合 (#13)
+- Simplify nested if statements in `getStepSize` (#14)
+- Remove status bar toggle button from control panel and integrate it (#13)
 
 ## [0.2.0] - 2026-06-30
 
 ### Added
-- アプリのアイコン追加と Saga.app パッケージング用のビルドスクリプトを追加 (#11)
-- 開発およびプロダクションビルド用の mise タスクを追加 (#11)
+- Add app icon and build script for Saga.app packaging (#11)
+- Add mise tasks for development and production builds (#11)
 
 ### Changed
-- 実際の変更内容を反映して README.md を更新 (#10)
-- アプリのアイコンをフラットデザインに変更し、背景を透過処理 (#11)
+- Update README.md to reflect actual changes (#10)
+- Change app icon to flat design and transparentize the background (#11)
 
 ### Fixed
-- リソース検索時の大文字小文字の区別を解決し、miseタスクの実行を修正 (#11)
+- Resolve case sensitivity in resource lookup and fix execution of mise tasks (#11)
 
 ## [0.1.3] - 2026-06-30
 
 ### Changed
-- 2ページ表示時の画像配置の調整および仕切り線（divider）の削除 (#8)
+- Adjust image placement in two-page view and remove divider line (#8)
 
 ### Fixed
-- `AsyncImageView` 内の `Image` に直接画像配置（alignment）を適用するよう修正 (#8)
+- Fix to apply image alignment directly to `Image` within `AsyncImageView` (#8)
 
 ## [0.1.2] - 2026-06-30
 
 ### Fixed
-- 「1枚ずらす」機能の動作仕様の変更 (#6)
-- 不要なコードの削除 (page shifting logic)
+- Change operation specification for "shift page by one" feature (#6)
+- Remove unused code (page shifting logic)
 
 ## [0.1.1] - 2026-06-30
 
