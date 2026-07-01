@@ -12,23 +12,27 @@ public struct ContentView: View {
     public var body: some View {
         VStack(spacing: 0) {
             // 1. コントロールパネル（上部）
-            controlPanel
-                .padding()
-                .background(Color(NSColor.windowBackgroundColor))
-            
-            Divider()
+            if state.showControlPanel {
+                controlPanel
+                    .padding()
+                    .background(Color(NSColor.windowBackgroundColor))
+                
+                Divider()
+            }
             
             // 2. メインステージ（画像表示エリア）
             mainStage
                 .frame(maxHeight: .infinity)
             
-            Divider()
-            
-            // 3. ステータスバー（下部）
-            statusBar
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color(NSColor.windowBackgroundColor))
+            if state.showStatusBar {
+                Divider()
+                
+                // 3. ステータスバー（下部）
+                statusBar
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .background(Color(NSColor.windowBackgroundColor))
+            }
         }
         .frame(minWidth: 800, minHeight: 600)
         .onAppear {

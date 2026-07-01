@@ -25,6 +25,8 @@ public class SagaViewerState: ObservableObject {
             validatePointer()
         }
     }
+    @Published public var showStatusBar: Bool = true
+    @Published public var showControlPanel: Bool = true
     
     public enum Direction {
         case rtl

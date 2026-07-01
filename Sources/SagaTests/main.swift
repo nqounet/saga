@@ -17,6 +17,8 @@ func testSagaViewerState_Initialization() {
     assertEqual(state.displayCount, 2, "displayCount should default to 2")
     assertEqual(state.pageDirection, SagaViewerState.Direction.rtl, "pageDirection should default to .rtl")
     assertEqual(state.isShifted, false, "isShifted should default to false")
+    assertEqual(state.showStatusBar, true, "showStatusBar should default to true")
+    assertEqual(state.showControlPanel, true, "showControlPanel should default to true")
 }
 
 @MainActor
