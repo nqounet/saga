@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-07-01
+
+### Changed
+- Localize UI and documentation to English (#17)
+- Localize CHANGELOG.md to English and enforce English language rule (#18)
+
+### Fixed
+- Address review feedback on localization in ContentView.swift (#17)
+
 ## [0.3.0] - 2026-07-01
 
 ### Added
