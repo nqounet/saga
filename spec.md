@@ -1,92 +1,86 @@
-# アプリケーション開発仕様書：SAGA
+# Application Development Specification: SAGA
 
-## 1. アプリケーション概要
+## 1. Application Overview
 
-* **アプリケーション名:** SAGA (Swift AVIF Graphic Assistant)
-* **目的:** macOS 13 Ventura以降のネイティブ機能（ImageIO / SwiftUI）を最大限に活用し、ローカルフォルダ内のAVIF形式の画像ファイルを、コミック閲覧に最適化されたレイアウト（見開き・右開き対応）で高速にブラウジングする軽量デスクトップアプリケーション。
+* **Application Name:** SAGA (Swift AVIF Graphic Assistant)
+* **Goal:** A lightweight desktop application that leverages native macOS 13 Ventura and later system APIs (ImageIO / SwiftUI) to browse AVIF image files in local folders, utilizing a layout (spread and RTL page flow) optimized for reading comics.
 
-## 2. 確信度と不確実な要素
+## 2. Confidence and Uncertainties
 
-* **確信度：極めて高**
-* macOSのシステムAPIに完全に準拠するため、外部の画像デコードライブラリが不要であり、アプリ自体のファイルサイズを数MB程度に抑えつつ、最高峰の描画パフォーマンスを発揮できます。
-* 要求されている「右開き時のカーソル逆転ロジック」や「1枚ずらし」は、SwiftUIの宣言的データバインディングとシンプルな配列演算のみで美しく実装可能です。
+* **Confidence: Extremely High**
+  - Since it strictly complies with native macOS system APIs, no external image decoding libraries are required. This keeps the application size to a few megabytes while achieving peak rendering performance.
+  - The requested page flow logic (reversed key navigation for RTL) and cover-page display logic can be cleanly implemented using SwiftUI's declarative data binding and simple array offset calculations.
 
-
-* **不確実な要素：**
-* ユーザーが選択したフォルダ内に、数千枚におよぶ大量の画像が存在する場合、メインスレッドでファイル一覧を取得すると一時的にUIがフリーズする恐れがあります。これに対応するため、ファイルスキャン処理はBackground（非同期）スレッドで行う設計としています。
-
-
+* **Uncertainties:**
+  - If a user selects a folder containing thousands of images, retrieving the file list on the main thread may temporarily freeze the UI. To prevent this, the folder scanning process is designed to run asynchronously on a background thread.
 
 ---
 
-## 3. 機能要件
+## 3. Functional Requirements
 
-### 3.1 フォルダ選択とファイルインデックス化
+### 3.1 Folder Selection and File Indexing
 
-1. **ターゲット指定:** ユーザーが選択した任意のローカルフォルダ（パス）を監視。
-2. **フォーマット限定:** 拡張子が `.avif`（大文字・小文字を区別しない）のファイルのみを抽出。
-3. **自然順ソート:** 抽出したファイル名を `localizedStandardCompare(_:)` を用いて自然順（例: `2.avif` が `10.avif` より前に来る）でソートし、不変の配列 `sourceList` を構築する。
+1. **Target Directory:** Watch any local folder path selected by the user.
+2. **Format Constraint:** Extract only files with the `.avif` extension (case-insensitive).
+3. **Natural Sorting:** Sort the extracted filenames using `localizedStandardCompare(_:)` in natural order (e.g., `2.avif` comes before `10.avif`) to build an immutable array `sourceList`.
 
-### 3.2 画面表示・レイアウト制御（オプション機能）
+### 3.2 Layout & View Settings
 
-1. **表示枚数（`displayCount`）:** 「1枚表示」または「2枚表示（見開き）」を動的に切り替え可能。
-2. **並べる（進む）方向（`pageDirection`）:** * `右開き (RTL)`: 日本の漫画スタイル。2枚表示時、インデックスが若い画像が「右側」に配置される。
-* `左開き (LTR)`: 洋書スタイル。2枚表示時、インデックスが若い画像が「左側」に配置される。
+1. **Layout (`displayCount`):** Dynamically switch between "Single Page" and "Two Pages" (spread).
+2. **Page Flow (`pageDirection`):**
+   - `Right to Left (RTL)`: Japanese manga style. In Two Pages mode, the lower-indexed image is placed on the "right" side.
+   - `Left to Right (LTR)`: Western book style. In Two Pages mode, the lower-indexed image is placed on the "left" side.
+3. **Show Cover Page (`showsCoverPage`):**
+   - `Enabled (True)`: Treats the first item (index 0) in the array as the "cover" and displays it alone. Spreads subsequent pages in pairs of two.
+   - `Disabled (False)`: Forces all pages, including the first page, to display in spreads of two.
 
+### 3.3 Keyboard Navigation (Arrow Keys)
 
-3. **表紙を表示（`showsCoverPage`）:** * `有効 (True)`: 配列の最初（インデックス0）を「表紙」とみなし、1枚だけで表示。次のページから2枚並べる。
-* `無効 (False)`: 最初のページから強制的に2枚並べる。
+Reverses the navigation direction of the keys dynamically based on the page flow setting (RTL/LTR).
 
-
-
-### 3.3 キーボードナビゲーション（カーソルキー）
-
-進む方向の設定（RTL/LTR）に応じて、ページ遷移のキー挙動を動的に反転させる。
-
-| ページ方向 | 押下キー | 内部ポインタの挙動 | ユーザーから見た効果 |
+| Reading Direction | Press Key | Pointer Adjustment | Visual Effect |
 | --- | --- | --- | --- |
-| **右開き (RTL)** | `左矢印キー (←)` | ポインタを増加させる (`+step`) | **左に進む（次ページへ）** |
-|  | `右矢印キー (→)` | ポインタを減少させる (`-step`) | 右に戻る（前ページへ） |
-| **左開き (LTR)** | `右矢印キー (→)` | ポインタを増加させる (`+step`) | **右に進む（次ページへ）** |
-|  | `左矢印キー (←)` | ポインタを減少させる (`-step`) | 左に戻る（前ページへ） |
+| **Right to Left (RTL)** | `Left Arrow (←)` | Increase pointer (`+step`) | **Advance to next page (left)** |
+|  | `Right Arrow (→)` | Decrease pointer (`-step`) | Return to previous page (right) |
+| **Left to Right (LTR)** | `Right Arrow (→)` | Increase pointer (`+step`) | **Advance to next page (right)** |
+|  | `Left Arrow (←)` | Decrease pointer (`-step`) | Return to previous page (left) |
 
 ---
 
-## 4. UI・画面構造設計
+## 4. UI & Layout Design
 
-アプリ全体の画面構成とコンポーネントの関係性です。
+The overall window layout and relationship between UI components:
 
 ```mermaid
 graph TD
-    subgraph "SAGA アプリケーションウィンドウ"
-        A["\"コントロールパネル（上部）\""] --> B["\"フォルダ選択 [Path]\""]
-        A --> C["\"表示枚数 [1枚 / 2枚]\""]
-        A --> D["\"進む方向 [右開き(左進) / 左開き(右進)]\""]
-        A --> E["\"表紙を表示 ON/OFF\""]
+    subgraph "SAGA Application Window"
+        A["\"Control Panel (Top)\""] --> B["\"Folder Selection [Path]\""]
+        A --> C["\"Layout [Single / Two Pages]\""]
+        A --> D["\"Direction [RTL / LTR]\""]
+        A --> E["\"Show Cover ON/OFF\""]
         
-        F["\"メインステージ（中央画像表示エリア）\""] --> G["\"左ビュー（Left View）\""]
-        F --> H["\"右ビュー（Right View）\""]
+        F["\"Main Stage (Center Image Area)\""] --> G["\"Left View\""]
+        F --> H["\"Right View\""]
         
-        I["\"ステータスバー（下部）\""] --> J["\"現在のポインタ / 総ページ数\""]
+        I["\"Status Bar (Bottom)\""] --> J["\"Current Index / Total Files\""]
     end
-
 ```
 
 ---
 
-## 5. データ構造と状態管理
+## 5. Data Structures and State Management
 
-SwiftUIでの実装を想定した、リアクティブな状態管理オブジェクトの定義。
+Definition of the reactive state management object for the SwiftUI implementation:
 
 ```swift
 class SagaViewerState: ObservableObject {
-    @Published var sourceImages: [URL] = []      // ソート済みのAVIFファイルURL配列
-    @Published var pointer: Int = 0               // 現在の表示基準インデックス
+    @Published var sourceImages: [URL] = []      // Sorted array of AVIF file URLs
+    @Published var pointer: Int = 0               // Current base display index
     
-    // オプション設定
-    @Published var displayCount: Int = 2          // 1 または 2
-    @Published var pageDirection: Direction = .rtl // .rtl (右開き) または .ltr (左開き)
-    @Published var showsCoverPage: Bool = false    // 表紙を表示フラグ
+    // Configurable Settings
+    @Published var displayCount: Int = 2          // 1 or 2
+    @Published var pageDirection: Direction = .rtl // .rtl or .ltr
+    @Published var showsCoverPage: Bool = false    // Cover page flag
     
     enum Direction {
         case rtl, ltr
@@ -94,48 +88,46 @@ class SagaViewerState: ObservableObject {
     
     var maxIndex: Int { sourceImages.count - 1 }
 }
-
 ```
 
 ---
 
-## 6. コアアルゴリズム
+## 6. Core Algorithms
 
-### 6.1 画像マッピング・ロジック
+### 6.1 Image Mapping Logic
 
-現在の `pointer` を元に、左右の画面に描画すべき画像のインデックスを決定する。
+Determines which image index should be shown on the left/right screen based on the current `pointer`.
 
 ```swift
 func calculateDisplayIndices(state: SagaViewerState) -> (left: Int?, right: Int?) {
     guard !state.sourceImages.isEmpty else { return (nil, nil) }
     
-    // 1. 1枚表示モードの場合
+    // 1. Single Page Mode
     if state.displayCount == 1 {
         return state.pageDirection == .ltr ? (state.pointer, nil) : (nil, state.pointer)
     }
     
-    // 2. 2枚表示 且つ 表紙表示ON 且つ 先頭ページ（表紙）の場合
+    // 2. Two Pages Mode with Cover Page ON at the Start
     if state.showsCoverPage && state.pointer == 0 {
         return state.pageDirection == .ltr ? (0, nil) : (nil, 0)
     }
     
-    // 3. 通常の2枚表示マッピング
+    // 3. Standard Two Pages Mapping
     let first = state.pointer
     let second = (first + 1 <= state.maxIndex) ? (first + 1) : nil
     
-    // ページ方向に応じて左右の割り当てを反転
+    // Flip left/right allocation based on page flow direction
     if state.pageDirection == .rtl {
-        return (left: second, right: first) // 右開き：若いインデックスが右
+        return (left: second, right: first) // RTL: lower index on the right
     } else {
-        return (left: first, right: second) // 左開き：若いインデックスが左
+        return (left: first, right: second) // LTR: lower index on the left
     }
 }
-
 ```
 
-### 6.2 ページ遷移（ステップ数）計算ロジック
+### 6.2 Navigation (Step Size) Calculation Logic
 
-「1枚ずらし」が有効な場合、表紙（ポインタ0）から進む時と、表紙に戻る時だけステップ数が `1` になる例外処理を挟む。
+When cover page support is enabled, step size changes to `1` when transitioning to or from the cover page (index 0).
 
 ```swift
 func getStepSize(state: SagaViewerState, isMovingForward: Bool) -> Int {
@@ -146,10 +138,10 @@ func getStepSize(state: SagaViewerState, isMovingForward: Bool) -> Int {
         if !isMovingForward && state.pointer == 1 { return 1 }
     }
     
-    return state.displayCount // 通常は 2 ページずつ移動
+    return state.displayCount // Normally advances by 2 pages
 }
 
-// ユーザーのアクション処理
+// Visual navigation handler
 func movePage(state: SagaViewerState, forward: Bool) {
     let step = getStepSize(state: state, isMovingForward: forward)
     
@@ -161,14 +153,13 @@ func movePage(state: SagaViewerState, forward: Bool) {
         if prevPointer >= 0 { state.pointer = prevPointer }
     }
 }
-
 ```
 
 ---
 
-## 7. テクノロジー実装のヒント（SwiftUIコードスケッチ）
+## 7. Implementation Details (SwiftUI Code Sketch)
 
-キーボードのイベント処理と、AVIF画像を左右に並べるビューのレイアウトは以下のように非常にシンプルに記述できます。
+The implementation details for handling keyboard events and organizing the dual image display layouts:
 
 ```swift
 struct ContentView: View {
@@ -176,35 +167,34 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
-            // コントロールパネルのUIをここに配置
+            // Control panel UI goes here
             
-            // メイン画像ステージ
+            // Main image stage
             HStack(spacing: 0) {
                 let indices = calculateDisplayIndices(state: state)
                 
-                // 左側エリア
+                // Left view
                 if let leftIdx = indices.left {
                     Image(nsImage: NSImage(contentsOf: state.sourceImages[leftIdx])!)
                         .resizable()
                         .scaledToFit()
                 } else {
-                    Spacer() // 空白表示
+                    Spacer() // Empty margin
                 }
                 
-                // 右側エリア
+                // Right view
                 if let rightIdx = indices.right {
                     Image(nsImage: NSImage(contentsOf: state.sourceImages[rightIdx])!)
                         .resizable()
                         .scaledToFit()
                 } else {
-                    Spacer() // 空白表示
+                    Spacer() // Empty margin
                 }
             }
-            .background(Color.black) // 漫画が見やすいよう背景は黒
+            .background(Color.black) // Dark background for optimal reading
         }
-        // キーボードショートカットの監視
+        // Monitor keyboard shortcuts
         .background(NSViewKeyMonitor(state: state)) 
     }
 }
-
 ```

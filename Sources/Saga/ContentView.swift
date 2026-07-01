@@ -51,17 +51,17 @@ public struct ContentView: View {
             Button(action: selectFolder) {
                 HStack {
                     Image(systemName: "folder.badge.plus")
-                    Text("フォルダ選択...")
+                    Text("Select Folder...")
                 }
             }
             .buttonStyle(.borderedProminent)
             
             Spacer()
             
-            // 表示枚数
-            Picker("表示枚数", selection: $state.displayCount) {
-                Text("1枚表示").tag(1)
-                Text("2枚表示").tag(2)
+            // Layout (Single / Two Pages)
+            Picker("Layout", selection: $state.displayCount) {
+                Text("Single Page").tag(1)
+                Text("Two Pages").tag(2)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -70,10 +70,10 @@ public struct ContentView: View {
             Divider()
                 .frame(height: 20)
             
-            // ページ方向
-            Picker("綴じ方向", selection: $state.pageDirection) {
-                Text("右開き (RTL)").tag(SagaViewerState.Direction.rtl)
-                Text("左開き (LTR)").tag(SagaViewerState.Direction.ltr)
+            // Reading Direction (RTL / LTR)
+            Picker("Reading Direction", selection: $state.pageDirection) {
+                Text("Right to Left (RTL)").tag(SagaViewerState.Direction.rtl)
+                Text("Left to Right (LTR)").tag(SagaViewerState.Direction.ltr)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -82,8 +82,8 @@ public struct ContentView: View {
             Divider()
                 .frame(height: 20)
             
-            // 表紙を表示
-            Toggle("表紙を表示", isOn: $state.showsCoverPage)
+            // Show Cover Page
+            Toggle("Show Cover Page", isOn: $state.showsCoverPage)
                 .disabled(state.displayCount == 1)
             
             Divider()
@@ -93,7 +93,7 @@ public struct ContentView: View {
                 Image(systemName: "arrow.clockwise")
             }
             .disabled(state.sourceImages.isEmpty)
-            .help("フォルダを再スキャン")
+            .help("Rescan folder")
         }
     }
     
@@ -112,9 +112,9 @@ public struct ContentView: View {
                 // 1枚表示（中央表示）
                 AsyncImageView(url: state.sourceImages[singleIdx], alignment: .center)
             } else {
-                // 画像なし、または余白
+                // Empty margin or blank
                 Color.black
-                    .overlay(Text(state.sourceImages.isEmpty ? "" : "余白").foregroundColor(.gray.opacity(0.3)))
+                    .overlay(Text(state.sourceImages.isEmpty ? "" : "Margin").foregroundColor(.gray.opacity(0.3)))
             }
         }
         .background(Color.black)
@@ -136,7 +136,7 @@ public struct ContentView: View {
     private var statusBar: some View {
         HStack {
             if state.sourceImages.isEmpty {
-                Text("フォルダが選択されていません。")
+                Text("No folder selected.")
                     .foregroundColor(.secondary)
             } else {
                 let indices = calculateDisplayIndices(state: state)
@@ -145,13 +145,13 @@ public struct ContentView: View {
                 
                 HStack(spacing: 12) {
                     Image(systemName: "photo.stack")
-                    Text("表示中: [ 左: \(leftText) ]  [ 右: \(rightText) ]")
+                    Text("Showing: [ Left: \(leftText) ]  [ Right: \(rightText) ]")
                         .font(.system(.body, design: .monospaced))
                 }
                 
                 Spacer()
                 
-                Text("\(state.pointer + 1) / \(state.sourceImages.count) ファイル")
+                Text("\(state.pointer + 1) / \(state.sourceImages.count) files")
                     .font(.headline)
             }
         }
@@ -164,7 +164,7 @@ public struct ContentView: View {
         openPanel.allowsMultipleSelection = false
         openPanel.canChooseDirectories = true
         openPanel.canChooseFiles = false
-        openPanel.title = "SAGA - 画像フォルダ選択"
+        openPanel.title = "SAGA - Select Image Folder"
         
         openPanel.begin { response in
             if response == .OK, let url = openPanel.url {
@@ -265,7 +265,7 @@ struct AsyncImageView: View {
                         .font(.caption)
                 }
             } else {
-                Text("画像なし")
+                Text("No Image")
                     .foregroundColor(.gray)
             }
         }
@@ -289,7 +289,7 @@ struct AsyncImageView: View {
             let loaded = try await SagaImageLoader.shared.loadImage(at: url)
             self.image = loaded
         } catch {
-            self.errorMessage = "画像の読み込みに失敗しました"
+            self.errorMessage = "Failed to load image"
             self.image = nil
         }
         isLoading = false
