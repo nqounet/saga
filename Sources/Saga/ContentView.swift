@@ -121,11 +121,11 @@ public struct ContentView: View {
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             guard let provider = providers.first else { return false }
             _ = provider.loadObject(ofClass: URL.self) { url, error in
-                guard let url = url else { return }
+                guard let url = url, url.isFileURL else { return }
                 var isDirectory: ObjCBool = false
                 if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue {
-                    Task { @MainActor in
-                        self.openFolder(at: url)
+                    Task {
+                        await self.openFolder(at: url)
                     }
                 }
             }
@@ -168,7 +168,9 @@ public struct ContentView: View {
         
         openPanel.begin { response in
             if response == .OK, let url = openPanel.url {
-                self.openFolder(at: url)
+                Task {
+                    await self.openFolder(at: url)
+                }
             }
         }
     }
@@ -176,14 +178,14 @@ public struct ContentView: View {
     private func reloadFolder() {
         guard let firstURL = state.sourceImages.first else { return }
         let parentFolder = firstURL.deletingLastPathComponent()
-        openFolder(at: parentFolder)
+        Task {
+            await openFolder(at: parentFolder)
+        }
     }
     
-    private func openFolder(at url: URL) {
+    private func openFolder(at url: URL) async {
         SagaImageLoader.shared.clearCache()
-        Task {
-            await state.scanFolder(at: url)
-        }
+        await state.scanFolder(at: url)
     }
     
     private func setupKeyMonitor() {
