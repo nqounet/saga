@@ -32,6 +32,12 @@ if [ -d "${SPM_RESOURCES}" ]; then
 fi
 
 # Info.plist の生成
+VERSION=$(sed -n 's/.*public static let version = "\(.*\)".*/\1/p' Sources/SagaCore/SagaCore.swift)
+if [ -z "${VERSION}" ]; then
+    echo "Warning: Version not found in SagaCore.swift, defaulting to 1.0.0"
+    VERSION="1.0.0"
+fi
+
 cat <<EOF > "${APP_DIR}/Contents/Info.plist"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -46,7 +52,7 @@ cat <<EOF > "${APP_DIR}/Contents/Info.plist"
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>${VERSION}</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>LSMinimumSystemVersion</key>
