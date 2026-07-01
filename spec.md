@@ -34,7 +34,7 @@
 * `左開き (LTR)`: 洋書スタイル。2枚表示時、インデックスが若い画像が「左側」に配置される。
 
 
-3. **1枚ずらし（`isShifted`）:** * `有効 (True)`: 配列の最初（インデックス0）を「表紙」とみなし、1枚だけで表示。次のページから2枚並べる。
+3. **表紙を表示（`showsCoverPage`）:** * `有効 (True)`: 配列の最初（インデックス0）を「表紙」とみなし、1枚だけで表示。次のページから2枚並べる。
 * `無効 (False)`: 最初のページから強制的に2枚並べる。
 
 
@@ -62,7 +62,7 @@ graph TD
         A["\"コントロールパネル（上部）\""] --> B["\"フォルダ選択 [Path]\""]
         A --> C["\"表示枚数 [1枚 / 2枚]\""]
         A --> D["\"進む方向 [右開き(左進) / 左開き(右進)]\""]
-        A --> E["\"見開き調整 [1枚ずらす ON/OFF]\""]
+        A --> E["\"表紙を表示 ON/OFF\""]
         
         F["\"メインステージ（中央画像表示エリア）\""] --> G["\"左ビュー（Left View）\""]
         F --> H["\"右ビュー（Right View）\""]
@@ -86,7 +86,7 @@ class SagaViewerState: ObservableObject {
     // オプション設定
     @Published var displayCount: Int = 2          // 1 または 2
     @Published var pageDirection: Direction = .rtl // .rtl (右開き) または .ltr (左開き)
-    @Published var isShifted: Bool = false         // 1枚ずらしフラグ
+    @Published var showsCoverPage: Bool = false    // 表紙を表示フラグ
     
     enum Direction {
         case rtl, ltr
@@ -114,8 +114,8 @@ func calculateDisplayIndices(state: SagaViewerState) -> (left: Int?, right: Int?
         return state.pageDirection == .ltr ? (state.pointer, nil) : (nil, state.pointer)
     }
     
-    // 2. 2枚表示 且つ 1枚ずらしON 且つ 先頭ページ（表紙）の場合
-    if state.isShifted && state.pointer == 0 {
+    // 2. 2枚表示 且つ 表紙表示ON 且つ 先頭ページ（表紙）の場合
+    if state.showsCoverPage && state.pointer == 0 {
         return state.pageDirection == .ltr ? (0, nil) : (nil, 0)
     }
     
@@ -141,7 +141,7 @@ func calculateDisplayIndices(state: SagaViewerState) -> (left: Int?, right: Int?
 func getStepSize(state: SagaViewerState, isMovingForward: Bool) -> Int {
     if state.displayCount == 1 { return 1 }
     
-    if state.isShifted {
+    if state.showsCoverPage {
         if isMovingForward && state.pointer == 0 { return 1 }
         if !isMovingForward && state.pointer == 1 { return 1 }
     }

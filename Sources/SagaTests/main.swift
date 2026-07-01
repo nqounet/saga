@@ -16,7 +16,7 @@ func testSagaViewerState_Initialization() {
     assertEqual(state.pointer, 0, "pointer should be 0 initially")
     assertEqual(state.displayCount, 2, "displayCount should default to 2")
     assertEqual(state.pageDirection, SagaViewerState.Direction.rtl, "pageDirection should default to .rtl")
-    assertEqual(state.isShifted, false, "isShifted should default to false")
+    assertEqual(state.showsCoverPage, false, "showsCoverPage should default to false")
     assertEqual(state.showStatusBar, true, "showStatusBar should default to true")
     assertEqual(state.showControlPanel, true, "showControlPanel should default to true")
 }
@@ -85,26 +85,33 @@ func testSagaViewerState_CalculateDisplayIndices() {
     assertEqual(left3, nil, "RTL 1-page display should place nil on the left")
     assertEqual(right3, 2, "RTL 1-page display should place image on the right")
     
-    // 3. 2枚表示 且つ 1枚ずらしON
+    // 3. 2枚表示 且つ 表紙表示ON
     state.displayCount = 2
     state.pointer = 0
-    state.isShifted = true
-    // isShifted が true の場合、pointer は自動的に 1 に調整されるはず。
-    assertEqual(state.pointer, 1, "isShifted=true should adjust pointer to 1")
+    state.showsCoverPage = true
+    // showsCoverPage が true の場合、pointer = 0 のときは 0 のまま。
+    assertEqual(state.pointer, 0, "showsCoverPage=true should allow pointer to be 0")
     
     state.pageDirection = .ltr
     let (left4, right4) = calculateDisplayIndices(state: state)
-    assertEqual(left4, 1, "Shifted LTR should place pointer on the left")
-    assertEqual(right4, 2, "Shifted LTR should place pointer+1 on the right")
+    assertEqual(left4, 0, "Shifted LTR (pointer 0) should place pointer 0 on the left")
+    assertEqual(right4, nil, "Shifted LTR (pointer 0) should place nil on the right")
     
     state.pageDirection = .rtl
     let (left5, right5) = calculateDisplayIndices(state: state)
-    assertEqual(left5, 2, "Shifted RTL should place pointer+1 on the left")
-    assertEqual(right5, 1, "Shifted RTL should place pointer on the right")
+    assertEqual(left5, nil, "Shifted RTL (pointer 0) should place nil on the left")
+    assertEqual(right5, 0, "Shifted RTL (pointer 0) should place pointer 0 on the right")
     
-    // isShifted を false に戻すと pointer は 0 に戻るはず
-    state.isShifted = false
-    assertEqual(state.pointer, 0, "isShifted=false should adjust pointer back to 0")
+    // pointer = 1 のとき
+    state.pointer = 1
+    state.pageDirection = .ltr
+    let (left4_1, right4_1) = calculateDisplayIndices(state: state)
+    assertEqual(left4_1, 1, "Shifted LTR (pointer 1) should place 1 on the left")
+    assertEqual(right4_1, 2, "Shifted LTR (pointer 1) should place 2 on the right")
+    
+    // showsCoverPage を false に戻すと pointer は奇数のままだが、今回は 1 なので、偶数 (0) に丸められる
+    state.showsCoverPage = false
+    assertEqual(state.pointer, 0, "showsCoverPage=false should adjust pointer 1 back to 0")
     
     // 4. 通常の2枚表示
     state.pointer = 0
@@ -153,15 +160,21 @@ func testSagaViewerState_PageTransition() {
     movePage(state: state, forward: false)
     assertEqual(state.pointer, 0, "Moving backward at 0 should stay at 0")
     
-    // 2. 2枚表示 且つ 1枚ずらしON
+    // 2. 2枚表示 且つ 表紙表示ON
     state.displayCount = 2
-    state.isShifted = true
+    state.pointer = 0
+    state.showsCoverPage = true
     
-    // isShifted が true のとき、pointer は 1 から始まる
-    assertEqual(state.pointer, 1, "Pointer should be adjusted to 1 when isShifted is set to true")
+    // showsCoverPage が true のとき、pointer=0 であれば 0 のまま
+    assertEqual(state.pointer, 0, "Pointer should stay 0 when showsCoverPage is set to true")
+    
+    // 0 から進む時は step=1
+    assertEqual(getStepSize(state: state, isMovingForward: true), 1, "Step forward from 0 with shift should be 1")
+    movePage(state: state, forward: true)
+    assertEqual(state.pointer, 1, "Pointer should go to 1 from 0 with shift")
     
     // 1 から進む時は step=2
-    assertEqual(getStepSize(state: state, isMovingForward: true), 2, "Step forward with shift should be 2")
+    assertEqual(getStepSize(state: state, isMovingForward: true), 2, "Step forward from 1 with shift should be 2")
     movePage(state: state, forward: true)
     assertEqual(state.pointer, 3, "Pointer should go to 3 from 1 with shift")
     
@@ -170,9 +183,10 @@ func testSagaViewerState_PageTransition() {
     movePage(state: state, forward: false)
     assertEqual(state.pointer, 1, "Pointer should return to 1 from 3 with shift")
     
-    // 1 からさらに戻ろうとしても、isShifted=true のときは 1 未満にならない
+    // 1 からさらに戻るときは、showsCoverPage=true なので 0 に戻る (step=1)
+    assertEqual(getStepSize(state: state, isMovingForward: false), 1, "Step backward from 1 with shift should be 1")
     movePage(state: state, forward: false)
-    assertEqual(state.pointer, 1, "Pointer should not go below 1 when isShifted is true")
+    assertEqual(state.pointer, 0, "Pointer should return to 0 from 1 when showsCoverPage is true")
     
     // 3. 境界値チェック (maxIndexを超えない)
     // maxIndex = 4 (urls.count = 5)
