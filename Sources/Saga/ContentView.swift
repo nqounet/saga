@@ -12,23 +12,27 @@ public struct ContentView: View {
     public var body: some View {
         VStack(spacing: 0) {
             // 1. コントロールパネル（上部）
-            controlPanel
-                .padding()
-                .background(Color(NSColor.windowBackgroundColor))
-            
-            Divider()
+            if state.showControlPanel {
+                controlPanel
+                    .padding()
+                    .background(Color(NSColor.windowBackgroundColor))
+                
+                Divider()
+            }
             
             // 2. メインステージ（画像表示エリア）
             mainStage
                 .frame(maxHeight: .infinity)
             
-            Divider()
-            
-            // 3. ステータスバー（下部）
-            statusBar
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color(NSColor.windowBackgroundColor))
+            if state.showStatusBar {
+                Divider()
+                
+                // 3. ステータスバー（下部）
+                statusBar
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .background(Color(NSColor.windowBackgroundColor))
+            }
         }
         .frame(minWidth: 800, minHeight: 600)
         .onAppear {
@@ -80,6 +84,14 @@ public struct ContentView: View {
             // 1枚ずらし
             Toggle("1枚ずらす（表紙）", isOn: $state.isShifted)
                 .disabled(state.displayCount == 1)
+            
+            Divider()
+                .frame(height: 20)
+            
+            Button(action: { state.showStatusBar.toggle() }) {
+                Image(systemName: state.showStatusBar ? "eye" : "eye.slash")
+            }
+            .help(state.showStatusBar ? "ステータスバーを隠す" : "ステータスバーを表示")
             
             Divider()
                 .frame(height: 20)

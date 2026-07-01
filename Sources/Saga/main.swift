@@ -19,6 +19,21 @@ struct SagaApp: App {
         WindowGroup("SAGA (Swift AVIF Graphic Assistant)") {
             ContentView(state: state)
         }
+        .commands {
+            CommandMenu("表示") {
+                Button(state.showControlPanel ? "ツールバーを非表示にする" : "ツールバーを表示する") {
+                    state.showControlPanel.toggle()
+                }
+                .keyboardShortcut("t", modifiers: [.command, .option])
+                
+                Divider()
+                
+                Button(state.showStatusBar ? "ステータスバーを非表示にする" : "ステータスバーを表示する") {
+                    state.showStatusBar.toggle()
+                }
+                .keyboardShortcut("/", modifiers: [.command])
+            }
+        }
     }
 }
 
