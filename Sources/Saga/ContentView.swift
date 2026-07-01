@@ -145,13 +145,13 @@ public struct ContentView: View {
                 
                 HStack(spacing: 12) {
                     Image(systemName: "photo.stack")
-                    Text("Showing: [ Left: \(leftText) ]  [ Right: \(rightText) ]")
+                    Text(String(format: NSLocalizedString("Showing: [ Left: %@ ]  [ Right: %@ ]", comment: ""), leftText, rightText))
                         .font(.system(.body, design: .monospaced))
                 }
                 
                 Spacer()
                 
-                Text("\(state.pointer + 1) / \(state.sourceImages.count) files")
+                Text(String(format: NSLocalizedString("%lld / %lld files", comment: ""), state.pointer + 1, state.sourceImages.count))
                     .font(.headline)
             }
         }
@@ -164,7 +164,7 @@ public struct ContentView: View {
         openPanel.allowsMultipleSelection = false
         openPanel.canChooseDirectories = true
         openPanel.canChooseFiles = false
-        openPanel.title = "SAGA - Select Image Folder"
+        openPanel.title = NSLocalizedString("SAGA - Select Image Folder", comment: "")
         
         openPanel.begin { response in
             if response == .OK, let url = openPanel.url {
@@ -289,7 +289,7 @@ struct AsyncImageView: View {
             let loaded = try await SagaImageLoader.shared.loadImage(at: url)
             self.image = loaded
         } catch {
-            self.errorMessage = "Failed to load image"
+            self.errorMessage = NSLocalizedString("Failed to load image", comment: "")
             self.image = nil
         }
         isLoading = false
