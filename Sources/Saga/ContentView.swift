@@ -1,5 +1,6 @@
 import SwiftUI
 import SagaCore
+import UniformTypeIdentifiers
 
 public struct ContentView: View {
     @ObservedObject var state: SagaViewerState
@@ -117,6 +118,19 @@ public struct ContentView: View {
             }
         }
         .background(Color.black)
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            guard let provider = providers.first else { return false }
+            _ = provider.loadObject(ofClass: URL.self) { url, error in
+                guard let url = url, url.isFileURL else { return }
+                var isDirectory: ObjCBool = false
+                if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue {
+                    Task {
+                        await self.openFolder(at: url)
+                    }
+                }
+            }
+            return true
+        }
     }
     
     private var statusBar: some View {
@@ -155,8 +169,7 @@ public struct ContentView: View {
         openPanel.begin { response in
             if response == .OK, let url = openPanel.url {
                 Task {
-                    SagaImageLoader.shared.clearCache()
-                    await self.state.scanFolder(at: url)
+                    await self.openFolder(at: url)
                 }
             }
         }
@@ -165,10 +178,14 @@ public struct ContentView: View {
     private func reloadFolder() {
         guard let firstURL = state.sourceImages.first else { return }
         let parentFolder = firstURL.deletingLastPathComponent()
-        SagaImageLoader.shared.clearCache()
         Task {
-            await state.scanFolder(at: parentFolder)
+            await openFolder(at: parentFolder)
         }
+    }
+    
+    private func openFolder(at url: URL) async {
+        SagaImageLoader.shared.clearCache()
+        await state.scanFolder(at: url)
     }
     
     private func setupKeyMonitor() {
