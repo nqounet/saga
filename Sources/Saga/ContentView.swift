@@ -88,14 +88,6 @@ public struct ContentView: View {
             Divider()
                 .frame(height: 20)
             
-            Button(action: { state.showStatusBar.toggle() }) {
-                Image(systemName: state.showStatusBar ? "eye" : "eye.slash")
-            }
-            .help(state.showStatusBar ? "ステータスバーを隠す" : "ステータスバーを表示")
-            
-            Divider()
-                .frame(height: 20)
-            
             Button(action: reloadFolder) {
                 Image(systemName: "arrow.clockwise")
             }
