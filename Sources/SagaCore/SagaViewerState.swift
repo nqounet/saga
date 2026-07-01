@@ -139,15 +139,8 @@ public func getStepSize(state: SagaViewerState, isMovingForward: Bool) -> Int {
     if state.displayCount == 1 { return 1 }
     
     if state.showsCoverPage {
-        if isMovingForward {
-            if state.pointer == 0 {
-                return 1
-            }
-        } else {
-            if state.pointer == 1 {
-                return 1
-            }
-        }
+        if isMovingForward && state.pointer == 0 { return 1 }
+        if !isMovingForward && state.pointer == 1 { return 1 }
     }
     
     return state.displayCount // 通常は 2 ページずつ移動
