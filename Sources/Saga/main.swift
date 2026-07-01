@@ -20,15 +20,13 @@ struct SagaApp: App {
             ContentView(state: state)
         }
         .commands {
-            CommandMenu("表示") {
-                Button(state.showControlPanel ? "ツールバーを非表示にする" : "ツールバーを表示する") {
+            CommandGroup(after: .toolbar) {
+                Button(state.showControlPanel ? "Hide Toolbar" : "Show Toolbar") {
                     state.showControlPanel.toggle()
                 }
                 .keyboardShortcut("t", modifiers: [.command, .option])
                 
-                Divider()
-                
-                Button(state.showStatusBar ? "ステータスバーを非表示にする" : "ステータスバーを表示する") {
+                Button(state.showStatusBar ? "Hide Status Bar" : "Show Status Bar") {
                     state.showStatusBar.toggle()
                 }
                 .keyboardShortcut("/", modifiers: [.command])
