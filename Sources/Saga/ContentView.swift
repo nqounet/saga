@@ -81,8 +81,8 @@ public struct ContentView: View {
             Divider()
                 .frame(height: 20)
             
-            // 1枚ずらし
-            Toggle("1枚ずらす（表紙）", isOn: $state.isShifted)
+            // 表紙を表示
+            Toggle("表紙を表示", isOn: $state.showsCoverPage)
                 .disabled(state.displayCount == 1)
             
             Divider()
@@ -98,21 +98,20 @@ public struct ContentView: View {
     
     private var mainStage: some View {
         let indices = calculateDisplayIndices(state: state)
-        let showBoth = indices.left != nil && indices.right != nil
         
-        return HStack(spacing: 0) {
-            // 左ビュー
-            if let leftIdx = indices.left, leftIdx < state.sourceImages.count {
-                AsyncImageView(url: state.sourceImages[leftIdx], alignment: showBoth ? .trailing : .center)
+        return Group {
+            if let leftIdx = indices.left, let rightIdx = indices.right,
+               leftIdx < state.sourceImages.count, rightIdx < state.sourceImages.count {
+                // 2枚表示（見開き）
+                HStack(spacing: 0) {
+                    AsyncImageView(url: state.sourceImages[leftIdx], alignment: .trailing)
+                    AsyncImageView(url: state.sourceImages[rightIdx], alignment: .leading)
+                }
+            } else if let singleIdx = indices.left ?? indices.right, singleIdx < state.sourceImages.count {
+                // 1枚表示（中央表示）
+                AsyncImageView(url: state.sourceImages[singleIdx], alignment: .center)
             } else {
-                Color.black
-                    .overlay(Text(state.sourceImages.isEmpty ? "" : "余白").foregroundColor(.gray.opacity(0.3)))
-            }
-            
-            // 右ビュー
-            if let rightIdx = indices.right, rightIdx < state.sourceImages.count {
-                AsyncImageView(url: state.sourceImages[rightIdx], alignment: showBoth ? .leading : .center)
-            } else {
+                // 画像なし、または余白
                 Color.black
                     .overlay(Text(state.sourceImages.isEmpty ? "" : "余白").foregroundColor(.gray.opacity(0.3)))
             }

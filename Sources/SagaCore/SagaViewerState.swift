@@ -20,7 +20,7 @@ public class SagaViewerState: ObservableObject {
         }
     }
     @Published public var pageDirection: Direction = .rtl
-    @Published public var isShifted: Bool = false {
+    @Published public var showsCoverPage: Bool = false {
         didSet {
             validatePointer()
         }
@@ -85,20 +85,14 @@ public class SagaViewerState: ObservableObject {
         
         // 2枚表示モードの場合の偶奇調整
         if displayCount == 2 {
-            if isShifted {
-                if maxIndex >= 1 {
-                    if target < 1 {
-                        target = 1
-                    } else if target % 2 == 0 {
-                        // 偶数の場合は奇数にする
-                        if target + 1 <= maxIndex {
-                            target += 1
-                        } else {
-                            target -= 1
-                        }
+            if showsCoverPage {
+                if target > 0 && target % 2 == 0 {
+                    // 0より大きい偶数の場合は奇数にする
+                    if target + 1 <= maxIndex {
+                        target += 1
+                    } else {
+                        target -= 1
                     }
-                } else {
-                    target = 0
                 }
             } else {
                 // 偽のときは偶数にする
@@ -124,6 +118,11 @@ public func calculateDisplayIndices(state: SagaViewerState) -> (left: Int?, righ
     }
     
     // 2. 2枚表示マッピング
+    // 表紙を表示する設定かつ最初のページの場合、1枚表示にする
+    if state.showsCoverPage && state.pointer == 0 {
+        return state.pageDirection == .ltr ? (state.pointer, nil) : (nil, state.pointer)
+    }
+    
     let first = state.pointer
     let second = (first + 1 <= state.maxIndex) ? (first + 1) : nil
     
@@ -138,6 +137,11 @@ public func calculateDisplayIndices(state: SagaViewerState) -> (left: Int?, righ
 @MainActor
 public func getStepSize(state: SagaViewerState, isMovingForward: Bool) -> Int {
     if state.displayCount == 1 { return 1 }
+    
+    if state.showsCoverPage {
+        if isMovingForward && state.pointer == 0 { return 1 }
+        if !isMovingForward && state.pointer == 1 { return 1 }
+    }
     
     return state.displayCount // 通常は 2 ページずつ移動
 }
