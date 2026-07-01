@@ -1,5 +1,5 @@
 import Foundation
 
 public struct SagaCore {
-    public static let version = "0.3.0"
+    public static let version = "0.3.1"
 }
