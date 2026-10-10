@@ -15,7 +15,7 @@ SAGA is a lightweight desktop application that leverages macOS 13 Ventura and la
 ## 2. Key Features
 
 - **Asynchronous Folder Scanning**: 
-  Extracts only files with the `.avif` extension (case-insensitive) from a specified folder. The file retrieval process runs asynchronously on a background thread, preventing the UI from freezing even with large numbers of files.
+  Extracts only files with the `.avif`, `.jpg`, or `.jpeg` extension (case-insensitive) from a specified folder. The file retrieval process runs asynchronously on a background thread, preventing the UI from freezing even with large numbers of files.
 - **Natural Order Sorting**: 
   The extracted files are indexed and sorted in natural order (e.g., `2.avif` comes before `10.avif` using `localizedStandardCompare(_:)`) based on their filenames.
 - **Flexible Display Modes**: 

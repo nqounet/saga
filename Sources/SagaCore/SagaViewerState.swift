@@ -38,7 +38,7 @@ public class SagaViewerState: ObservableObject {
     }
     
     // サポートする拡張子リスト（将来の拡張のために定義）
-    public var supportedExtensions: Set<String> = ["avif"]
+    public var supportedExtensions: Set<String> = ["avif", "jpg", "jpeg"]
     
     public init() {}
     
