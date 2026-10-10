@@ -38,6 +38,8 @@ func testSagaViewerState_FileScanningAndSorting() async {
         "1.avif",
         "test.png",
         "03.avif",
+        "4.jpg",
+        "5.JPEG",
         "ignore.txt"
     ]
     
@@ -49,8 +51,8 @@ func testSagaViewerState_FileScanningAndSorting() async {
     let state = SagaViewerState()
     await state.scanFolder(at: tempDir)
     
-    // 期待される結果は自然順ソートされた .avif / .AVIF のファイル名
-    let expectedNames = ["1.avif", "2.avif", "03.avif", "10.AVIF"]
+    // 期待される結果は自然順ソートされた .avif / .jpg / .jpeg（大文字・小文字を問わない）のファイル名
+    let expectedNames = ["1.avif", "2.avif", "03.avif", "4.jpg", "5.JPEG", "10.AVIF"]
     let actualNames = state.sourceImages.map { $0.lastPathComponent }
     
     assertEqual(actualNames, expectedNames, "Scanned files should be filtered and sorted naturally")

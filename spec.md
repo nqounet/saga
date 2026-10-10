@@ -21,7 +21,7 @@
 ### 3.1 Folder Selection and File Indexing
 
 1. **Target Directory:** Watch any local folder path selected by the user.
-2. **Format Constraint:** Extract only files with the `.avif` extension (case-insensitive).
+2. **Format Constraint:** Extract only files with the `.avif`, `.jpg`, or `.jpeg` extension (case-insensitive).
 3. **Natural Sorting:** Sort the extracted filenames using `localizedStandardCompare(_:)` in natural order (e.g., `2.avif` comes before `10.avif`) to build an immutable array `sourceList`.
 
 ### 3.2 Layout & View Settings
