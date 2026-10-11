@@ -25,10 +25,13 @@ cp "${BUILD_BIN}" "${APP_DIR}/Contents/MacOS/${APP_NAME}"
 
 # リソースファイル (SPMリソース) のコピー
 # Package.swift 内で定義された resources の成果物をコピーする
-SPM_RESOURCES=$(find .build/release -iname "${APP_NAME}_${APP_NAME}.resources" | head -n 1)
+SPM_RESOURCES=$(find .build/release/ -maxdepth 1 -iname "*_${APP_NAME}.bundle" | head -n 1)
 if [ -d "${SPM_RESOURCES}" ]; then
     echo "==> Embedding resources..."
-    cp -R "${SPM_RESOURCES}/" "${APP_DIR}/Contents/Resources/"
+    cp -R "${SPM_RESOURCES}" "${APP_DIR}/Contents/Resources/"
+else
+    echo "Error: SPM resource bundle not found (app would crash at launch)"
+    exit 1
 fi
 
 # Info.plist の生成
